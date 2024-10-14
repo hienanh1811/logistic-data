@@ -9,6 +9,7 @@ Question 4: Which driver has the highest number of order cancellations (Cancel b
 Question 5: Which driver has the third highest order cancellation rate?
 
 Question 6: Calculate the total cost of the above incentive program for AhaMove drivers
+
 Here is the incentive policy for drivers:
 Number of Completed Orders	Bonus Amount
 100	100,000VND
