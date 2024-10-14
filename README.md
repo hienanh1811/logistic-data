@@ -1,20 +1,15 @@
-# logistic-data
-Chào Bạn,	
-	
-Dưới đây là một vài hướng dẫn về bài test mà Bạn cần hoàn thành	
-	
-Bước 1: Copy dữ liệu từ bài test sang Trang tính (Google sheet) mới	
-Bước 2: Thực hiện làm đầy đủ 07 câu hỏi dựa trên dữ liệu từ sheet "data-order"	
-Trong đó: 	
-+ Q1-Q6: Sử dụng dữ liệu tại sheet "data-order"	
-+ Q7: Sử dụng khả năng research của Bạn	
-Bước 3: Gửi kết quả bài test qua email của HR Ahamove	
-"* Lưu ý: 
-- Các đáp án cần thể hiện rõ các công thức mà Bạn sử dụng
-- Chia sẻ quyền view link kết quả của Bạn cho bất kỳ ai có link này"	
-	
-Tài liệu này có thể giúp ích cho bạn:	
-The QUERY() function: Learn SQL code from the comfort of a Google spreadsheet	
-	
-	
-Chúc bạn thành công!	
+Question 1: Who is the driver who completed the second most BIKE orders?
+Question 2: Calculate the completion rate of orders for Districts 1, 2, and 3
+Question 3: What is the median income of the drivers?
+Question 4: Which driver has the highest number of order cancellations (Cancel by supplier)?
+Question 5: Which driver has the third highest order cancellation rate?
+Question 6: Calculate the total cost of the above incentive program for AhaMove drivers
+Here is the incentive policy for drivers:
+Number of Completed Orders	Bonus Amount
+100	100,000VND
+300	300,000VND
+500	500,000VND
+700	700,000VND
+Conditions to receive the bonus:
+* The driver's cancellation rate must be less than 1%.
+* The driver's average rating must be higher than 4.	
