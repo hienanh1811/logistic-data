@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/Users/HienAnh/Desktop/Ahamove.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="3041"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,14:maindata_operation"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Ahamove_Test_Deli_Operations_HA - data-order" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="102"/><column index="2" value="102"/><column index="3" value="300"/><column index="4" value="44"/><column index="5" value="103"/><column index="6" value="102"/><column index="7" value="53"/><column index="8" value="102"/><column index="9" value="107"/><column index="10" value="89"/><column index="11" value="300"/><column index="12" value="300"/><column index="13" value="77"/><column index="14" value="74"/><column index="15" value="93"/><column index="16" value="237"/><column index="17" value="108"/><column index="18" value="56"/><column index="19" value="57"/><column index="20" value="300"/><column index="21" value="50"/><column index="22" value="72"/><column index="23" value="76"/><column index="24" value="66"/><column index="25" value="60"/><column index="26" value="71"/><column index="27" value="71"/><column index="28" value="76"/><column index="29" value="41"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">-- Question 1: Who is the driver who completed the second most BIKE orders?
+SELECT supplier_name, COUNT(*) as order_count
+FROM data_order
+WHERE service_id = 'SGN-BIKE'
+GROUP BY supplier_name
+ORDER BY order_count DESC
+LIMIT 2;
+
+-- Answer: Nguyen An Hoa witb 468 ords
+
+
+-- Question 2: Calculate the completion rate of orders for Districts 1, 2, and 3
+SELECT
+address,
+SUM(total_complete) AS total_complete,
+SUM(total_order) AS total_order,
+SUM(total_complete) * 1.0 / SUM(total_order) AS completion_rate
+FROM
+data_operation
+WHERE
+address IN ('Quận 1', 'Quận 2', 'Quận 3')
+GROUP BY
+address;
+
+-- Answer: Completion rate for District 1: 0.874; Completion rate for District 2: 0.840; Completion rate for District 3: 0.873
+
+
+-- Question 3: What is the median income of the drivers? (Income = 76.4% of the total fee)
+SELECT avg(luong) as median
+FROM 
+(        select luong
+        , ROW_NUMBER() OVER (ORDER BY luong ASC, supplier_name ASC) AS AtoZ
+        , ROW_NUMBER() OVER (ORDER BY luong DESC, supplier_name DESC) AS ZtoA
+        from 
+        (        select supplier_name
+                , sum (total_fee)*0.764 as luong
+                from data_order
+                group by supplier_name
+        )
+)
+WHERE AtoZ IN (ZtoA, ZtoA - 1, ZtoA + 1);
+
+-- Answer: The median income of the drivers is 13,939,332 VND
+
+-- Question 4: Which driver has the highest number of order cancellations (Cancel by supplier)?
+SELECT
+supplier_name,
+COUNT(*) as order_count
+FROM data_order
+WHERE status = 'CANCELLED'
+GROUP BY supplier_name
+ORDER BY order_count DESC
+LIMIT 1;
+
+-- Answer: Driver Nguyen The Hung
+
+-- Question 5: Which driver has the third highest order cancellation rate?
+With T0 as
+(        select supplier_name
+        , count(status) as cancel_order
+        from data_order
+        where lower(cancel_comment) like 'cancel by supplier%'
+        group by supplier_name
+)
+
+, T1 as 
+(        Select a.supplier_name
+        , ROUND(CAST(T0.cancel_order AS REAL)/ CAST(count(a.status) AS REAL) *100,2) AS Cancel_rate
+        from data_order a
+        left JOIN t0 on a.supplier_name = t0.supplier_name
+        where a.status = 'COMPLETED'
+        group by a.supplier_name
+)
+
+select * 
+from (select *
+                , dense_rank () over (order by Cancel_rate desc) as STT 
+                from T1
+                )
+where STT = 3;
+
+-- Answer: Nguyen An Hoa with the cancellation rate of 91%
+
+-- Question 6: Calculate the total cost of the incentive program for AhaMove drivers
+with t0 as
+(        select a.supplier_name
+        , b.cancel
+        , count(a.status) as completed
+        , case when round(cast(b.cancel as REAL)/cast(count(a.status) as REAL) *100,2) is null then 0
+                else round(cast(b.cancel as REAL)/cast(count(a.status) as REAL) *100,2)        
+                end as cancel_rate
+        from data_order a
+        left join (
+                                select supplier_name
+                                , count(status) as cancel
+                                from data_order
+                                where lower(cancel_comment) like 'cancel by supplier%'
+                                group by supplier_name
+                        ) b 
+                        ON a.supplier_name = b.supplier_name
+        where a.status = 'COMPLETED'
+        group by a.supplier_name
+)
+
+, t1 as 
+(
+        select a.supplier_name
+        , avg(a.rating_by_user) as rating_by_user
+        , t0.cancel_rate
+        , t0.completed
+        , case 
+                when (t0.cancel_rate &lt;1) AND (avg(a.rating_by_user) &gt;4) AND (t0.completed BETWEEN 100 and 299) then 100000
+                when (t0.cancel_rate &lt;1) AND (avg(a.rating_by_user) &gt;4) AND (t0.completed BETWEEN 300 and 499) then 300000
+                when (t0.cancel_rate &lt;1) AND (avg(a.rating_by_user) &gt;4) AND (t0.completed BETWEEN 500 and 699) then 500000
+                when (t0.cancel_rate &lt;1) AND (avg(a.rating_by_user) &gt;4) AND (t0.completed &gt;= 700) then 700000
+                else 0
+                end as thuong
+        from data_order a
+        LEFT join t0 on a.supplier_name = t0.supplier_name
+        group by a.supplier_name
+)
+select * from t1;</sql><current_tab id="0"/></tab_sql></sqlb_project>
